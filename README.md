@@ -4,16 +4,24 @@
 
 基于 [Hammerspoon](https://www.hammerspoon.org/)，适合在全屏工作和观看视频时快速切换菜单栏显示方式。
 
+## 已知问题：Codex 全屏菜单栏可能不刷新
+
+2026-10-19 实际使用中发现：脚本记录偏好写入成功后，Codex 的全屏窗口仍可能保持隐藏菜单栏。不能用写入成功的日志判断窗口已切换，也不能把这个问题仅归为系统设置页面缓存；根因尚未确定。
+
+遇到此问题时，先从 Hammerspoon 控制台执行 `menuBarCorner.stop()` 暂停检测，在系统设置中将菜单栏设为「永不」，再手动退出并重新进入应用的全屏模式。本次 Codex 问题已通过重新进入全屏恢复显示。
+
+当前版本仍属实验配置。首次安装的示例默认暂停，确认自己的应用能够正常切换后，再从菜单栏「角」中手动启用。
+
 ## 使用效果
 
 - 鼠标进入左上角立即触发，没有额外的停留延迟；以 50 毫秒间隔检测位置。
-- 成功时静默切换，失败时显示提示。
+- 偏好写入时不显示成功提示；写入失败时显示提示。
 - 停在角落只触发一次，离开角落约 24 个坐标单位后再进入，可以切回。
 - 按住 Command、Option、Control、Shift、Fn 或鼠标按钮时暂停触发，避免影响拖动。
 - 安全输入开启时暂停检测。
 - 使用鼠标当前所在屏幕的左上角，支持多屏。
 
-已在 macOS 27.0.1、Hammerspoon 1.1.1 上验证实际全屏切换。其他版本尚未验证，系统升级可能改变相关偏好键或通知。
+在 macOS 27.0.1、Hammerspoon 1.1.1 上做过切换测试，但后续实际使用已发现上述 Codex 全屏兼容问题，无法保证所有窗口即时刷新。其他版本尚未验证。
 
 ## 安装
 
@@ -29,7 +37,7 @@
 
 4. 将 [init.example.lua](init.example.lua) 中的内容加入已有的 `~/.hammerspoon/init.lua`。如果该文件不存在，可以新建；已有配置无需整体替换。
 
-5. 从 Hammerspoon 菜单选择 **Reload Config**。首次加载会自动启用，鼠标先离开左上角，再进入即可触发。
+5. 从 Hammerspoon 菜单选择 **Reload Config**。首次安装的示例默认暂停；如要测试，从菜单栏「角」中手动启用，鼠标先离开左上角再进入。
 
 6. 如需登录后自动使用，在 Hammerspoon Preferences 中勾选 **Launch Hammerspoon at login**，并保持 Hammerspoon 运行。
 
@@ -49,8 +57,8 @@
 
 ## 实现方式与限制
 
-脚本读取 `AppleMenuBarVisibleInFullscreen`，在两种状态之间切换，同时将 `_HIHideMenuBar` 保持为 `false`，让桌面视图下的菜单栏始终显示。随后发送 `AppleInterfaceFullScreenMenuBarVisibilityChangedNotification`，让当前全屏窗口更新显示策略。
+脚本读取 `AppleMenuBarVisibleInFullscreen`，在两种状态之间切换，同时将 `_HIHideMenuBar` 保持为 `false`，让桌面视图下的菜单栏始终显示。随后发送 `AppleInterfaceFullScreenMenuBarVisibilityChangedNotification`，尝试刷新当前全屏窗口的显示策略。该通知不能保证所有应用都立即更新。
 
-「系统设置 → 菜单栏」中的下拉框可能保留旧值，未必随脚本操作同步刷新。已验证的实际全屏显示行为可以正常切换，请以实际效果为准。
+「系统设置 → 菜单栏」中的下拉框未必随脚本操作同步刷新；实际全屏显示也可能没有更新。请以实际效果为准，出现异常时先暂停脚本。
 
 检测区域由 `menubar_corner.lua` 中的 `zone` 控制，默认为左上角 3 个坐标单位；定时器间隔为 `0.05` 秒。
