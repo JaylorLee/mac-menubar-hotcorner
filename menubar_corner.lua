@@ -20,7 +20,7 @@ function M.toggle()
     if ok and readBool('AppleMenuBarVisibleInFullscreen') == visible and not readBool('_HIHideMenuBar') then
         hs.distributednotifications.post(settingsNotification)
         local mode = visible and '永不' or '仅在全屏幕视图下'
-        log.i('切换成功：' .. mode)
+        log.i('菜单栏偏好已写入（窗口显示效果未验证）：' .. mode)
         M.lastMode = mode
     else
         log.e('无法写入菜单栏设置')
